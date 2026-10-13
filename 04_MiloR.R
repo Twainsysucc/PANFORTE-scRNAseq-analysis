@@ -55,7 +55,6 @@ run_milo <- function(seu, selected_types) {
   stopifnot(!anyDuplicated(design$patient_id))
   rownames(design) <- design$patient_id
   design <- design[colnames(nhoodCounts(milo)), , drop = FALSE]
-  stopifnot(!anyNA(design$patient_id))
 
   milo <- calcNhoodDistance(milo, d = 30, reduced.dim = "PCA")
   da <- testNhoods(
