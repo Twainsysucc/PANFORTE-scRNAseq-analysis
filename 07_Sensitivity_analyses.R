@@ -141,7 +141,7 @@ composition_G4_paired <- speckle::propeller.ttest(
   sort = TRUE
 )
 
-fit_milo <- function(x, selected_types, seed = 20261005) {
+fit_milo <- function(x, selected_types, seed = 2026) {
   x <- subset(x, cells = colnames(x)[as.character(x$cell_type) %in% selected_types])
   DefaultAssay(x) <- "RNA"
   x <- NormalizeData(x, verbose = FALSE)
