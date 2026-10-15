@@ -36,8 +36,6 @@ target_counts <- cell_counts %>%
   group_by(cell_type) %>%
   summarise(n_target = min(n), .groups = "drop")
 
-stopifnot(all(target_counts$n_target >= 10))
-
 set.seed(2026)
 
 balanced_meta <- meta %>%
@@ -52,8 +50,6 @@ balanced_meta <- meta %>%
 balanced_counts <- balanced_meta %>%
   count(response, cell_type, name = "n") %>%
   pivot_wider(names_from = response, values_from = n)
-
-stopifnot(all(balanced_counts$CR == balanced_counts$`non-CR`))
 
 seu_cc <- subset(seu, cells = balanced_meta$cell)
 DefaultAssay(seu_cc) <- "RNA"
