@@ -95,20 +95,55 @@ sample_summary <- bind_rows(lapply(names(regrowth_groups), function(g) {
     mutate(group = g)
 })) %>% select(group, response, n_patients)
 
-
 composition_sensitivity <- bind_rows(lapply(c("G1", "G2", "G3"), function(g) {
   labels <- regrowth_groups[[g]]
   dat <- seu[[]] %>%
     select(patient_id, cell_type) %>%
     inner_join(labels, by = "patient_id")
-  result <- speckle::propeller(
+
+  prop_list <- speckle::getTransformedProps(
     clusters = factor(dat$cell_type),
     sample = factor(dat$patient_id),
-    group = dat$response,
-    transform = "asin",
-    robust = FALSE,
-    trend = FALSE
+    transform = "asin"
   )
+  design_df <- dat %>%
+    distinct(patient_id, response, batch) %>%
+    as.data.frame()
+  design_df <- design_df[
+    match(colnames(prop_list$TransformedProps), design_df$patient_id),
+    , drop = FALSE
+  ]
+  rownames(design_df) <- design_df$patient_id
+
+  design_df$group <- factor(
+    design_df$response,
+    levels = c("CR", "non-CR"),
+    labels = c("CR", "nonCR")
+  )
+  design_df$batch <- droplevels(factor(design_df$batch))
+  design_formula <- if (nlevels(design_df$batch) > 1) {
+    ~ 0 + group + batch
+  } else {
+    ~ 0 + group
+  }
+  design_matrix <- model.matrix(
+    design_formula,
+    data = design_df
+  )
+  contrast <- limma::makeContrasts(
+    groupnonCR - groupCR,
+    levels = design_matrix
+  )
+
+  result <- speckle::propeller.ttest(
+    prop.list = prop_list,
+    design = design_matrix,
+    contrasts = as.numeric(contrast),
+    robust = FALSE,
+    trend = FALSE,
+    sort = TRUE
+  )
+  
   as.data.frame(result) %>%
     tibble::rownames_to_column("cell_type") %>%
     mutate(analysis = g)
@@ -131,7 +166,19 @@ matched_design$group <- factor(
   labels = c("CR", "nonCR")
 )
 matched_design$subclass <- factor(matched_design$subclass)
-paired_matrix <- model.matrix(~ 0 + group + subclass, data = matched_design)
+matched_design$batch <- droplevels(
+  factor(matched_design$batch)
+)
+paired_formula <- if (nlevels(matched_design$batch) > 1) {
+  ~ 0 + group + subclass + batch
+} else {
+  ~ 0 + group + subclass
+}
+paired_matrix <- model.matrix(
+  paired_formula,
+  data = matched_design
+)
+
 paired_contrast <- limma::makeContrasts(groupnonCR - groupCR, levels = paired_matrix)
 composition_G4_paired <- speckle::propeller.ttest(
   prop.list = matched_props,
@@ -185,10 +232,6 @@ test_milo <- function(m, labels) {
   } else {
     ~ response
   }
-  design_matrix <- model.matrix(
-    design_formula,
-    data = design
-  )
 
   da <- miloR::testNhoods(
     m, design = design_formula, design.df = design,
