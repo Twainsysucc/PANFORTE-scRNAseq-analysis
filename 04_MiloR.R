@@ -73,11 +73,6 @@ run_milo <- function(seu, selected_types) {
     ~ response
   }
   
-  design_matrix <- model.matrix(
-    design_formula,
-    data = design
-  )
-  
   milo <- calcNhoodDistance(
     milo,
     d = 30,
