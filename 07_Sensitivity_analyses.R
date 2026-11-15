@@ -220,28 +220,52 @@ fit_milo <- function(x, selected_types, seed = 2026) {
 }
 
 test_milo <- function(m, labels) {
-  stopifnot(!anyDuplicated(labels$patient_id))
+
   counts <- miloR::nhoodCounts(m)
   patients <- intersect(colnames(counts), labels$patient_id)
   miloR::nhoodCounts(m) <- counts[, patients, drop = FALSE]
-  design <- labels[match(patients, labels$patient_id), , drop = FALSE]
-  design$response <- factor(design$response, levels = c("CR", "non-CR"))
+  design <- as.data.frame(
+    labels[match(patients, labels$patient_id), , drop = FALSE]
+  )
+  design$response <- factor(
+    design$response,
+    levels = c("CR", "non-CR")
+  )
+  design$batch <- droplevels(factor(design$batch))
   rownames(design) <- design$patient_id
+  
   design_formula <- if (nlevels(design$batch) > 1) {
     ~ batch + response
   } else {
+    message("Only one batch in this subset: fitting ~ response.")
     ~ response
   }
-
+  
+  design_matrix <- model.matrix(
+    design_formula,
+    data = design
+  )
   da <- miloR::testNhoods(
-    m, design = design_formula, design.df = design,
-    norm.method = "logMS", fdr.weighting = "graph-overlap", robust = TRUE
+    m,
+    design = design_formula,
+    design.df = design,
+    norm.method = "logMS",
+    fdr.weighting = "graph-overlap",
+    robust = TRUE
   )
-  da <- miloR::annotateNhoods(m, da, coldata_col = "cell_state")
-  da %>% mutate(
-    state = if_else(cell_state_fraction >= 0.60,
-                    as.character(cell_state), "Mixed")
+  da <- miloR::annotateNhoods(
+    m,
+    da,
+    coldata_col = "cell_state"
   )
+  da %>%
+    mutate(
+      state = if_else(
+        cell_state_fraction >= 0.60,
+        as.character(cell_state),
+        "Mixed"
+      )
+    )
 }
 
 summarise_epi_milo <- function(da, analysis) {
