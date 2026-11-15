@@ -56,32 +56,43 @@ run_milo <- function(seu, selected_types) {
     metadata[, c("patient_id", "response", "batch"), drop = FALSE]
   )
   design <- as.data.frame(design)
+  sample_order <- colnames(nhoodCounts(milo))
+  idx <- match(sample_order, design$patient_id)
+  design <- design[idx, , drop = FALSE]
   rownames(design) <- design$patient_id
-  
-  design <- design[
-    colnames(nhoodCounts(milo)),
-    , drop = FALSE
-  ]
   design$response <- factor(
     design$response,
     levels = c("CR", "non-CR")
   )
   design$batch <- droplevels(factor(design$batch))
   
+  design_formula <- if (nlevels(design$batch) > 1) {
+    ~ batch + response
+  } else {
+    message("Only one batch in this cell subset: fitting ~ response.")
+    ~ response
+  }
+  
   design_matrix <- model.matrix(
-    ~ batch + response,
+    design_formula,
     data = design
   )
-
-  milo <- calcNhoodDistance(milo, d = 30, reduced.dim = "PCA")
+  
+  milo <- calcNhoodDistance(
+    milo,
+    d = 30,
+    reduced.dim = "PCA"
+  )
+  
   da <- testNhoods(
     milo,
-    design = ~ batch + response,
+    design = design_formula,
     design.df = design,
     norm.method = "logMS",
     fdr.weighting = "graph-overlap",
     robust = TRUE
   )
+  
   
   da <- annotateNhoods(milo, da, coldata_col = "cell_type")
   da <- annotateNhoods(milo, da, coldata_col = "cell_state")
