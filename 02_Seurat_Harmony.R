@@ -91,22 +91,7 @@ p_density <- ggplot(umap_df, aes(UMAP_1, UMAP_2)) +
   theme_bw() +
   theme(panel.grid = element_blank())
 
-p_composition <- ggplot(
-  composition_df,
-  aes(x = response, y = proportion, fill = cell_type)
-) +
-  geom_col(position = "fill", width = 0.6, alpha = 0.8) +
-  scale_fill_manual(values = celltype_colors) +
-  scale_y_continuous(labels = scales::percent) +
-  labs(x = NULL, y = "Mean patient-level proportion") +
-  theme_classic() +
-  theme(
-    legend.title = element_blank(),
-    axis.text.x = element_text(angle = 45, hjust = 1)
-  )
-
 print(p_umap)
 print(p_markers)
 print(p_density)
-print(p_composition)
 
