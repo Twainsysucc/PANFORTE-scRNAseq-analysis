@@ -2,7 +2,6 @@
 
 library(Seurat)
 library(dplyr)
-library(tidyr)
 library(speckle)
 
 seu <- readRDS("data/processed_seurat.rds")
@@ -17,40 +16,36 @@ meta <- seu[[]] %>%
 
 patient_info <- distinct(meta, patient_id, response, batch)
 
-cell_types <- sort(unique(as.character(meta$cell_type)))
-
-composition_df <- meta %>%
-  count(patient_id, response, cell_type, name = "n_cells") %>%
-  group_by(patient_id, response) %>%
-  complete(cell_type = cell_types, fill = list(n_cells = 0L)) %>%
-  mutate(proportion = n_cells / sum(n_cells)) %>%
-  ungroup()
-
-composition_summary <- composition_df %>%
-  group_by(response, cell_type) %>%
-  summarise(mean_proportion = mean(proportion), .groups = "drop")
-
 prop_list <- speckle::getTransformedProps(
   clusters = factor(meta$cell_type),
   sample = factor(meta$patient_id),
   transform = "asin"
 )
-design_df <- as.data.frame(patient_info)
-design_df <- design_df[
-  match(colnames(prop_list$TransformedProps), design_df$patient_id),
-  , drop = FALSE
-]
+
+sample_order <- colnames(prop_list$TransformedProps)
+idx <- match(sample_order, patient_info$patient_id)
+design_df <- as.data.frame(patient_info[idx, ])
 rownames(design_df) <- design_df$patient_id
+
 design_df$group <- factor(
   design_df$response,
   levels = c("CR", "non-CR"),
   labels = c("CR", "nonCR")
 )
 design_df$batch <- droplevels(factor(design_df$batch))
+
+design_formula <- if (nlevels(design_df$batch) > 1) {
+  ~ 0 + group + batch
+} else {
+  message("Only one sequencing batch: fitting a group-only model.")
+  ~ 0 + group
+}
+
 design_matrix <- model.matrix(
-  ~ 0 + group + batch,
+  design_formula,
   data = design_df
 )
+
 contrast <- limma::makeContrasts(
   groupnonCR - groupCR,
   levels = design_matrix
@@ -68,3 +63,4 @@ propeller_results <- speckle::propeller.ttest(
   tibble::rownames_to_column("cell_type") %>%
   select(cell_type, P_value = P.Value, FDR)
 
+print(propeller_results)
