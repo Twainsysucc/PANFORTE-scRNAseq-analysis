@@ -93,7 +93,6 @@ run_milo <- function(seu, selected_types) {
     robust = TRUE
   )
   
-  
   da <- annotateNhoods(milo, da, coldata_col = "cell_type")
   da <- annotateNhoods(milo, da, coldata_col = "cell_state")
   
