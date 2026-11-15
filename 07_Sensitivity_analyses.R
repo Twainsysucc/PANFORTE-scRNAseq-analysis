@@ -240,11 +240,7 @@ test_milo <- function(m, labels) {
     message("Only one batch in this subset: fitting ~ response.")
     ~ response
   }
-  
-  design_matrix <- model.matrix(
-    design_formula,
-    data = design
-  )
+
   da <- miloR::testNhoods(
     m,
     design = design_formula,
