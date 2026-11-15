@@ -21,11 +21,12 @@ DefaultAssay(seu_decontx) <- "RNA"
 
 seu$patient_id <- as.character(seu$sample_id)
 seu$response <- factor(seu$response, levels = c("CR", "non-CR"))
+seu$batch <- factor(seu$batch)
 
 common_cells <- intersect(colnames(seu), colnames(seu_decontx))
 stopifnot(setequal(common_cells, colnames(seu)))
 seu_decontx <- subset(seu_decontx, cells = common_cells)
-for (field in c("patient_id", "response", "cell_type", "cell_state")) {
+for (field in c("patient_id", "response", "batch", "cell_type", "cell_state")) {
   seu_decontx@meta.data[[field]] <- seu@meta.data[colnames(seu_decontx), field]
 }
 
@@ -51,7 +52,7 @@ qc_summary <- tibble(
 )
 
 patient_info <- seu[[]] %>%
-  distinct(patient_id, response)
+  distinct(patient_id, response, batch)
 
 regrowth_groups <- list(
   G1 = patient_info,
@@ -85,8 +86,8 @@ match_fit <- MatchIt::matchit(
   replace = FALSE
 )
 matched_patients <- MatchIt::match.data(match_fit) %>%
-  select(patient_id, response, subclass)
-regrowth_groups$G4 <- select(matched_patients, patient_id, response)
+  select(patient_id, response, batch, subclass)
+regrowth_groups$G4 <- select(matched_patients, patient_id, response, batch)
 
 sample_summary <- bind_rows(lapply(names(regrowth_groups), function(g) {
   regrowth_groups[[g]] %>%
@@ -179,9 +180,18 @@ test_milo <- function(m, labels) {
   design <- labels[match(patients, labels$patient_id), , drop = FALSE]
   design$response <- factor(design$response, levels = c("CR", "non-CR"))
   rownames(design) <- design$patient_id
+  design_formula <- if (nlevels(design$batch) > 1) {
+    ~ batch + response
+  } else {
+    ~ response
+  }
+  design_matrix <- model.matrix(
+    design_formula,
+    data = design
+  )
 
   da <- miloR::testNhoods(
-    m, design = ~ response, design.df = design,
+    m, design = design_formula, design.df = design,
     norm.method = "logMS", fdr.weighting = "graph-overlap", robust = TRUE
   )
   da <- miloR::annotateNhoods(m, da, coldata_col = "cell_state")
@@ -204,7 +214,7 @@ summarise_epi_milo <- function(da, analysis) {
 milo_epi_qc <- lapply(qc_objects, fit_milo, selected_types = "Epithelial")
 epi_qc_summary <- bind_rows(lapply(names(milo_epi_qc), function(q) {
   m <- milo_epi_qc[[q]]
-  patients <- qc_objects[[q]][[]] %>% distinct(patient_id, response)
+  patients <- qc_objects[[q]][[]] %>% distinct(patient_id, response, batch)
   summarise_epi_milo(test_milo(m, patients), q)
 }))
 
