@@ -44,7 +44,7 @@ run_milo <- function(seu, selected_types) {
   milo <- Milo(sce)
   milo <- buildGraph(milo, k = 30, d = 30, reduced.dim = "PCA")
   
-  set.seed(20260913)
+  set.seed(2026)
   milo <- makeNhoods(
     milo, prop = 0.05, k = 30, d = 30,
     refined = TRUE, reduced_dims = "PCA"
