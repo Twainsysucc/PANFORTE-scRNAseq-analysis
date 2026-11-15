@@ -11,11 +11,11 @@ meta <- seu[[]] %>%
   transmute(
     patient_id = as.character(sample_id),
     response = factor(response, levels = c("CR", "non-CR")),
+    batch = factor(batch),
     cell_type = as.character(cell_type)
-  ) %>%
-  filter(!is.na(patient_id), !is.na(response), !is.na(cell_type))
+  )
 
-patient_info <- distinct(meta, patient_id, response)
+patient_info <- distinct(meta, patient_id, response, batch)
 
 cell_types <- sort(unique(as.character(meta$cell_type)))
 
@@ -30,17 +30,41 @@ composition_summary <- composition_df %>%
   group_by(response, cell_type) %>%
   summarise(mean_proportion = mean(proportion), .groups = "drop")
 
-propeller_results <- speckle::propeller(
+prop_list <- speckle::getTransformedProps(
   clusters = factor(meta$cell_type),
   sample = factor(meta$patient_id),
-  group = meta$response,
-  transform = "asin",
+  transform = "asin"
+)
+design_df <- as.data.frame(patient_info)
+design_df <- design_df[
+  match(colnames(prop_list$TransformedProps), design_df$patient_id),
+  , drop = FALSE
+]
+rownames(design_df) <- design_df$patient_id
+design_df$group <- factor(
+  design_df$response,
+  levels = c("CR", "non-CR"),
+  labels = c("CR", "nonCR")
+)
+design_df$batch <- droplevels(factor(design_df$batch))
+design_matrix <- model.matrix(
+  ~ 0 + group + batch,
+  data = design_df
+)
+contrast <- limma::makeContrasts(
+  groupnonCR - groupCR,
+  levels = design_matrix
+)
+
+propeller_results <- speckle::propeller.ttest(
+  prop.list = prop_list,
+  design = design_matrix,
+  contrasts = as.numeric(contrast),
   robust = FALSE,
-  trend = FALSE
+  trend = FALSE,
+  sort = TRUE
 ) %>%
   as.data.frame() %>%
   tibble::rownames_to_column("cell_type") %>%
   select(cell_type, P_value = P.Value, FDR)
 
-print(composition_summary)
-print(propeller_results)
