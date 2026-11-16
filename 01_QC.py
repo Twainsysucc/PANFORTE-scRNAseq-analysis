@@ -50,7 +50,14 @@ adata_filter = ov.pp.qc(
         "detected_genes": 400
     }
 )
-print(f"Cells after QC: {adata_filter.n_obs}")
 
-
-
+# Cells retained after scrublet: 415290, 282 removed.
+# End of post doublets removal and QC plots.
+# Filters application (seurat or mads)
+# Tresholds used, nUMIs: (400, 9210.0); filtered-out-cells:         32262
+# Tresholds used, n genes: (400, 3144.0); filtered-out-cells:         58255
+# Lower treshold, mito %: 0.7; filtered-out-cells:         3869
+# Filters applicated.
+# Total cell filtered out with this last --mode mads QC (and its     chosen options): 72837
+# Cells retained after scrublet and mads filtering: 342453, 73119 removed.
+#
