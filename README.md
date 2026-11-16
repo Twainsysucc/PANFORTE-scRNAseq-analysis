@@ -30,8 +30,6 @@ The deposited datasets are currently being updated and are scheduled for release
 
 The analysis and figure-generation scripts are being progressively curated and deposited in this repository.
 
-**Repository status:** Under preparation. The complete set of analysis scripts is not yet available.
-
 # Software
 
 Analyses were performed using R 4.3.1, Seurat 5.4.0, Harmony 1.2.4, miloR 1.8.1, speckle 1.0.0, CellChat 1.6.1, Monocle 2.28.0, celda 1.16.1, MatchIt 4.8.0, OmicVerse 1.6.8, and Scanpy 1.10.3.
