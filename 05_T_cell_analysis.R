@@ -204,3 +204,28 @@ CellChat::netVisual_circle(
   title.name = network_title,
   color.use = node_colors
 )
+
+
+
+# ------------------------------------------------------------
+# ssGSEA signature scoring and heatmap
+# ------------------------------------------------------------
+
+signature_heatmap <- ComplexHeatmap::Heatmap(
+  heatmap_matrix,
+  name = "Scaled score",
+  col = circlize::colorRamp2(
+    c(-2, 0, 2),
+    c("#5bacdb", "white", "#ea7fa3")
+  ),
+  cluster_rows = FALSE,
+  cluster_columns = FALSE,
+  cluster_row_slices = FALSE,
+  show_row_dend = FALSE,
+  show_column_dend = FALSE,
+  row_split = row_categories,
+  row_order = seq_len(nrow(heatmap_matrix)),
+  rect_gp = grid::gpar(col = "black", lwd = 1)
+)
+
+ComplexHeatmap::draw(signature_heatmap)
