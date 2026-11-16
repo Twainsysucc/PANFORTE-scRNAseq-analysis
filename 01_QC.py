@@ -41,6 +41,9 @@ adata_filter = ov.pp.qc(
     nmads=5,
     min_cells=3,
     min_genes=200,
+    batch_key="sample_id",
+    doublets=True,
+    doublets_method="scrublet",
     tresh={
         "mito_perc": 0.7,
         "nUMIs": 400,
