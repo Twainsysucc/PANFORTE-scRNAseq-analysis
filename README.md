@@ -22,9 +22,7 @@ The computational analyses include:
 
 # Data availability
 
-The single-cell RNA-seq datasets are deposited in the China National GeneBank DataBase (CNGBdb) under accession number CNP0009362.
-
-The deposited datasets are currently being updated and are scheduled for release after December 30, 2026, subject to controlled-access requirements and institutional privacy restrictions.
+The sequencing data are deposited in the China National GeneBank DataBase (CNGBdb) under accession number CNP0009362. The project record is publicly accessible, and access to the raw sequencing data can be requested through CNGBdb in accordance with the repository’s data access procedures.
 
 # Software
 
