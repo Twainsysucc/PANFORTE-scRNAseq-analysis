@@ -170,9 +170,9 @@ matched_design$batch <- droplevels(
   factor(matched_design$batch)
 )
 paired_formula <- if (nlevels(matched_design$batch) > 1) {
-  ~ 0 + group + subclass + batch
+  ~ 0 + group + batch
 } else {
-  ~ 0 + group + subclass
+  ~ 0 + group
 }
 paired_matrix <- model.matrix(
   paired_formula,
