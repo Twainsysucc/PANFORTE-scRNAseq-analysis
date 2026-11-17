@@ -22,7 +22,7 @@ The computational analyses include:
 
 # Data availability
 
-The sequencing data are deposited in the China National GeneBank DataBase (CNGBdb) under accession number CNP0009362. The project record is publicly accessible, and access to the raw sequencing data can be requested through CNGBdb in accordance with the repository’s data access procedures.
+The sequencing data are deposited in the China National GeneBank DataBase (CNGBdb) under accession number CNP0009362. The project record is publicly accessible, and access to the processed single-cell RNA sequencing data can be requested through CNGBdb in accordance with the repository’s data access procedures.
 
 # Software
 
